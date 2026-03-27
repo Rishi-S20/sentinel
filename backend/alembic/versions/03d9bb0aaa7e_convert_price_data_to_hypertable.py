@@ -18,8 +18,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("SELECT create_hypertable('price_data', 'time');")
-    pass
+    op.execute("SELECT create_hypertable('price_data', 'time', if_not_exists => TRUE);")
 
 
 def downgrade() -> None:
