@@ -19,9 +19,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://redis:6379/0"
 
     # ---- Auth ----
-    SECRET_KEY: str = "change-me-to-a-random-string-in-production"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    STACK_PROJECT_ID: str = ""
+    STACK_SECRET_SERVER_KEY: str = ""
 
     # ---- AI / LLM ----
     ANTHROPIC_API_KEY: str = ""

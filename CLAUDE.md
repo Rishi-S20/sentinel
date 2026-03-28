@@ -8,7 +8,7 @@ Think: Bloomberg Terminal meets an AI research analyst — for individual invest
 
 ## Current Status
 
-**Phase 1 (Foundation)** — in progress. Project skeleton is built, Docker Compose runs all services, database schema has `assets` and `price_data` tables created via Alembic migration. Next step: implement the price poller worker, then auth system.
+**Phase 1 (Foundation)** — in progress. Project skeleton is built, Docker Compose runs all services, database schema has `assets` and `price_data` tables (hypertable) created via Alembic migrations. Price poller worker implemented (yfinance, pending network fix). Next step: implement Stack Auth integration, then agent/watchlist models.
 
 Phases 2-6 are not started yet. Placeholder files exist for all future modules with TODO comments indicating which phase they belong to.
 
@@ -37,7 +37,7 @@ API Gateway (FastAPI, Python 3.12)
 - **AI**: Anthropic Claude API (Sonnet) for agent reasoning/analysis, OpenAI text-embedding-3-small for document embeddings
 - **Data sources**: Alpha Vantage / yfinance (stock prices), CoinGecko (crypto), NewsAPI / Finnhub (news), Reddit API via PRAW (social sentiment), SEC EDGAR (government filings)
 - **Payments**: Stripe (subscription billing)
-- **Auth**: JWT + bcrypt, Google OAuth (later)
+- **Auth**: Stack Auth (managed SaaS) — handles email/password, sessions, Google OAuth. Backend verifies JWTs via Stack Auth's JWKS endpoint using PyJWT.
 - **Deployment**: Docker Compose locally, AWS ECS/EC2 for production (later)
 
 ## Repo Structure
@@ -203,7 +203,7 @@ price_data (
 ```
 
 ### Future tables (not yet created)
-- `users` — id, email, name, password_hash, plan_tier
+- `users` — id (Stack Auth user ID), email, name, plan_tier (no password_hash — Stack Auth owns passwords)
 - `agents` — id, user_id, name, status, config_json
 - `agent_watchlist` — agent_id, asset_id
 - `belief_states` — agent_id, asset_id, conviction_score, thesis, key_factors (JSONB), evidence_refs
@@ -271,7 +271,8 @@ docker compose exec db psql -U sentinel -d sentinel
 
 ## Environment Variables
 
-All defined in `.env.example`. Currently only database and Redis URLs are needed. API keys can be added later as each phase requires them:
+All defined in `.env.example`. API keys added as each phase requires them:
+- Phase 1: STACK_PROJECT_ID, STACK_SECRET_SERVER_KEY (Stack Auth — already obtained)
 - Phase 2: ALPHA_VANTAGE_API_KEY (or use yfinance for free), NEWS_API_KEY, REDDIT_CLIENT_ID/SECRET
 - Phase 3: ANTHROPIC_API_KEY, OPENAI_API_KEY
 - Phase 6: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SENDGRID_API_KEY
@@ -283,3 +284,5 @@ All defined in `.env.example`. Currently only database and Redis URLs are needed
 - **Belief states are append-only** — never UPDATE, always INSERT a new row. This preserves full history for the belief timeline feature.
 - **Celery tasks that hit external APIs** should always handle rate limits, retries, and failures gracefully. Use `@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)`.
 - **The free tier MVP** focuses on a single stock for a single agent. Multi-asset, multi-agent, and billing come later.
+- **Stack Auth integration**: Frontend uses `@stackframe/stack` SDK — `useUser()` hook provides the current user, `user.getAuthJson()` returns the access token. Token is sent to FastAPI as `x-stack-access-token` header (not `Authorization: Bearer`). Backend verifies using PyJWT + Stack Auth's JWKS endpoint: `https://api.stack-auth.com/api/v1/projects/<project-id>/.well-known/jwks.json`. Algorithm is `ES256`, audience is the project ID.
+- **`auth_service.py` is not used** — Stack Auth replaces all manual auth logic. The file can be deleted.
