@@ -20,7 +20,7 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
     const { params, ...fetchOptions } = options;
 
@@ -36,7 +36,7 @@ class ApiClient {
     };
 
     if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
+      headers["x-stack-access-token"] = this.token;
     }
 
     const response = await fetch(url, {

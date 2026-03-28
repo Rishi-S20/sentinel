@@ -15,7 +15,7 @@ from app.database import Base
 from app.models.asset import Asset
 from app.models.price_data import PriceData
 # Future models — uncomment as implemented:
-# from app.models.user import User
+from app.models.user import User
 # from app.models.agent import Agent
 # from app.models.belief import BeliefState
 # from app.models.article import Article
