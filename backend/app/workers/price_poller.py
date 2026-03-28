@@ -8,11 +8,14 @@ This is the first worker to implement. It will:
 
 from app.workers.celery_app import celery_app
 import logging
-import yfinance as yf
 import asyncio
 from sqlalchemy.dialects.postgresql import insert
 from app.database import async_session
 from app.models.price_data import PriceData
+
+import requests
+from datetime import datetime, timezone
+from app.config import settings
 
 
 logger = logging.getLogger(__name__)
@@ -33,21 +36,32 @@ def fetch_prices():
 
 
 def fetch_ohlcv(symbol: str) -> list[dict]:
-    ticker = yf.Ticker(symbol)
-    df = ticker.history(period="7d")
-    rows=[]
-    for timestamp, row in df.iterrows():
+    url = "https://www.alphavantage.co/query"
+    params = {
+        "function": "TIME_SERIES_DAILY",
+        "symbol": symbol,
+        "apikey": settings.ALPHA_VANTAGE_API_KEY
+    }
+
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    data = response.json()
+
+    time_series = data.get("Time Series (Daily)", {})
+
+    rows = []
+    for date_str, values in time_series.items():
         rows.append({
-            "time": timestamp,
+            "time": datetime.fromisoformat(date_str).replace(tzinfo=timezone.utc),
             "asset_id": symbol,
-            "open": row["Open"],
-            "high": row["High"],
-            "low": row["Low"],
-            "close": row["Close"],
-            "volume": int(row["Volume"]),
+            "open": float(values["1. open"]),
+            "high": float(values["2. high"]),
+            "low": float(values["3. low"]),
+            "close": float(values["4. close"]),
+            "volume": int(values["5. volume"]),
         })
-    return rows
     
+    return rows
 
 
 async def save_prices_async(rows: list[dict]):
