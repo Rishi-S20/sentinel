@@ -42,10 +42,10 @@ celery_app.conf.update(
             "schedule": 300.0,  # Every 5 minutes
         },
         # These will be uncommented as we build each worker:
-        # "fetch-news": {
-        #     "task": "app.workers.news_fetcher.fetch_news",
-        #     "schedule": 900.0,  # Every 15 minutes
-        # },
+        "fetch-news": {
+            "task": "app.workers.news_fetcher.fetch_news",
+            "schedule": 900.0,  # Every 15 minutes
+        },
         # "crawl-sec-filings": {
         #     "task": "app.workers.sec_crawler.crawl_filings",
         #     "schedule": crontab(hour="*/6"),  # Every 6 hours
