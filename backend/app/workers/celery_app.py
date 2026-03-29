@@ -60,9 +60,9 @@ celery_app.conf.update(
         # },
 
         # ---- Agent Runs ----
-        # "run-agents": {
-        #     "task": "app.workers.agent_runner.run_due_agents",
-        #     "schedule": 3600.0,  # Every hour
-        # },
+        "run-agents": {
+            "task": "app.workers.agent_runner.run_due_agents",
+            "schedule": 3600.0,  # Every hour
+        },
     },
 )

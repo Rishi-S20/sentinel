@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # ---- AI / LLM ----
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
 
     # ---- Market Data ----
     ALPHA_VANTAGE_API_KEY: str = ""
