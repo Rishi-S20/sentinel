@@ -20,7 +20,7 @@ from app.models.agent import Agent
 from app.models.belief import BeliefState
 from app.models.article import Article
 # from app.models.filing import Filing
-# from app.models.briefing import Briefing
+from app.models.briefing import Briefing
 # from app.models.alert import Alert
 
 config = context.config
