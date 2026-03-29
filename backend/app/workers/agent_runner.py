@@ -12,8 +12,22 @@ from app.core.reasoning_chain import run_reasoning_chain
 from app.core.belief_engine import get_latest_belief, save_belief
 from app.core.anomaly_detector import detect_anomaly
 from app.workers.embedding_pipeline import get_embedding
+from app.core.briefing_generator import generate_briefing
+
+
+
 
 logger = logging.getLogger(__name__)
+
+async def _generate_all_briefings():
+    async with async_session() as session:
+        result = await session.execute(
+            select(Agent).where(Agent.status == "active")
+        )
+        agents = result.scalars().all()
+    for agent in agents:
+        await asyncio.get_event_loop().run_in_executor(None, generate_briefing, agent.id)
+    return len(agents)
 
 
 async def run_agent(agent: Agent):
@@ -68,3 +82,9 @@ def run_due_agents():
     count = asyncio.run(_run_all_agents())
     logger.info(f"Ran reasoning cycle for {count} agents")
     return {"status": "ok", "agents_run": count}
+
+@celery_app.task(name="app.workers.agent_runner.generate_all_briefings")
+def generate_all_briefings():
+    count = asyncio.run(_generate_all_briefings())
+    logger.info(f"Generated briefings for {count} agents")
+    return {"status": "ok", "agents": count}

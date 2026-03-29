@@ -4,6 +4,7 @@ from celery import Celery
 from celery.schedules import crontab
 import os
 
+
 # Use sync Redis URL for Celery broker
 redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
@@ -71,5 +72,11 @@ celery_app.conf.update(
             "schedule": 900.0,  # Every 15 minutes, right after news fetcher
         },
 
+
+        "generate_briefings": {
+            "task" : "app.workers.agent_runner.generate_all_briefings",
+            "schedule" : crontab(hour=7, minute = 0),
+
+        },
     },
 )
