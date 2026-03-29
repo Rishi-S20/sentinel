@@ -11,14 +11,14 @@ from app.core.belief_engine import get_latest_belief
 async def get_recent_prices(asset_id: str, days: int = 7) -> list[dict]:
     async with async_session() as session:
         result = await session.execute(
-            text("""
+            text(f"""
                  SELECT time, open, high, low, close, volume
                  FROM price_data
                  WHERE asset_id = :asset_id
-                    AND time >= NOW() - INTERVAL ':days days'
-                ORDER BY time DESC          
+                    AND time >= NOW() - INTERVAL '{days} days'
+                ORDER BY time DESC
             """),
-            {"asset_id": asset_id, "days": days},
+            {"asset_id": asset_id},
         )
         rows = result.mappings().all()
         return [dict(r) for r in rows]

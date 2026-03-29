@@ -6,6 +6,7 @@ from sqlalchemy import select
 from app.workers.celery_app import celery_app
 from app.database import async_session
 from app.models.agent import Agent
+from app.models.asset import Asset  # noqa: F401 — required for SQLAlchemy to resolve Agent.watchlist relationship
 from app.core.memory_manager import assemble_context
 from app.core.reasoning_chain import run_reasoning_chain
 from app.core.belief_engine import get_latest_belief, save_belief

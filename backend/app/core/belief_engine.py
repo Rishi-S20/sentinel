@@ -23,7 +23,7 @@ async def save_belief(
         key_factors: list[dict],
         evidence_refs: list[dict],
 ) -> BeliefState:
-    async with async_session as session:
+    async with async_session() as session:
         belief = BeliefState(
             agent_id=agent_id,
             asset_id=asset_id,

@@ -29,5 +29,4 @@ class Agent(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     watchlist = relationship("Asset", secondary=agent_watchlist, lazy="selectin")
-    beliefs = relationship("BeliefState", back_populates="agent", lazy="dynamic")
     
