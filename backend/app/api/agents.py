@@ -10,6 +10,8 @@ from pydantic import BaseModel
 
 from app.models.belief import BeliefState
 from app.models.briefing import Briefing
+from app.models.user import User
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 
 router = APIRouter()
@@ -25,7 +27,7 @@ async def list_agents(user=Depends(get_current_user)):
         result = await session.execute(
             select(Agent).where(Agent.user_id == user["sub"])
         )
-        agents = result.scalrs().all()
+        agents = result.scalars().all()
         return [
             {
                 "id" : a.id,
@@ -40,6 +42,16 @@ async def list_agents(user=Depends(get_current_user)):
 @router.post("")
 async def create_agent(body: CreateAgentRequest, user=Depends(get_current_user)):
     async with async_session() as session:
+        # Upsert user from Stack Auth JWT claims
+        await session.execute(
+            pg_insert(User).values(
+                id=user["sub"],
+                email=user.get("email", ""),
+                name=user.get("name") or user.get("email", ""),
+            ).on_conflict_do_nothing(index_elements=["id"])
+        )
+        await session.flush()
+
         agent = Agent(user_id=user["sub"], name=body.name)
         session.add(agent)
         await session.flush()
@@ -47,11 +59,11 @@ async def create_agent(body: CreateAgentRequest, user=Depends(get_current_user))
         for symbol in body.asset_symbols:
             asset = await session.get(Asset, symbol.upper())
             if not asset:
-                assset = Asset(
+                asset = Asset(
                     id=symbol.upper(),
-                    symbol = symbol.upper(),
-                    name = symbol.upper(),
-                    asset_type = AssetType.STOCK,
+                    symbol=symbol.upper(),
+                    name=symbol.upper(),
+                    asset_type=AssetType.STOCK,
                 )
                 session.add(asset)
                 await session.flush()
