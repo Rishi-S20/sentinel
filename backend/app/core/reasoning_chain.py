@@ -5,7 +5,7 @@ import google.generativeai as genai
 from app.config import settings
 
 genai.configure(api_key=settings.GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-3-flash-preview")
+model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
 
 SYSTEM_PROMPT = """You are a finanical analysis AI. Given recent price data and news articels for a stock,
 analyze the information and return a structure JSON belief state.
