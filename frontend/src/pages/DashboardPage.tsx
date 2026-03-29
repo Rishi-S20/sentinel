@@ -2,6 +2,7 @@ import { useUser } from "@stackframe/stack";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/api/client";
+import NavBar from "@/components/NavBar";
 
 interface Agent {
   id: string;
@@ -27,13 +28,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return;
-    user.getAuthJson().then((auth) => {
-      api.setToken(auth.accessToken);
-      return api.get<Agent[]>("/agents");
-    }).then((res) => {
-      setAgents(res);
-      setLoading(false);
-    });
+    user
+      .getAuthJson()
+      .then((auth) => {
+        api.setToken(auth.accessToken);
+        return api.get<Agent[]>("/agents");
+      })
+      .then((res) => {
+        setAgents(res);
+        setLoading(false);
+      });
   }, [user]);
 
   const createAgent = async () => {
@@ -56,6 +60,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-surface-950 text-white p-8">
+      <div className="min-h-screen bg-surface-950 text-white">
+        <NavBar />
+        <div className="p-8">{/* existing content */}</div>
+      </div>
       <h1 className="text-2xl font-bold mb-6">My Agents</h1>
 
       {/* Create agent form */}
