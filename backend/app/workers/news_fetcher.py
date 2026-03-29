@@ -4,9 +4,11 @@ from app.workers.celery_app import celery_app
 import logging
 
 import asyncio
+from sqlalchemy import select, distinct
 from sqlalchemy.dialects.postgresql import insert
 from app.database import async_session
 from app.models.article import Article
+from app.models.agent import Agent, agent_watchlist
 
 import requests
 from app.config import settings
@@ -15,11 +17,22 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-async def save_articles_async(rows: list[dict]):
+async def get_tracked_symbols() -> list[str]:
     async with async_session() as session:
-        for row in rows:
-            stmt = insert(Article).values(**row).on_conflict_do_nothing(index_elements=["url"])
-            await session.execute(stmt)
+        result = await session.execute(
+            select(distinct(agent_watchlist.c.asset_id))
+            .join(Agent, Agent.id == agent_watchlist.c.agent_id)
+            .where(Agent.status == "active")
+        )
+        return [row[0] for row in result.all()]
+
+
+async def save_articles_async(rows: list[dict]):
+    if not rows:
+        return
+    async with async_session() as session:
+        stmt = insert(Article).values(rows).on_conflict_do_nothing(index_elements=["url"])
+        await session.execute(stmt)
         await session.commit()
 
 def save_articles(rows: list[dict]):
@@ -27,14 +40,17 @@ def save_articles(rows: list[dict]):
 
 @celery_app.task(name="app.workers.news_fetcher.fetch_news")
 def fetch_news():
-    item = "AAPL"
-    rows = fetch_articles(item)
-    if not rows:
-        logger.warning(f"fetch_articles returned no data for {item}")
-        return {"status": "no_data"}
-    save_articles(rows)
-    logger.info(f"Saved {len(rows)} articles for {item}")
-    return {"status": "ok", "articles_saved": len(rows)}
+    symbols = asyncio.run(get_tracked_symbols())
+    total = 0
+    for symbol in symbols:
+        rows = fetch_articles(symbol)
+        if not rows:
+            logger.warning(f"No articles for {symbol}")
+            continue
+        save_articles(rows)
+        total += len(rows)
+        logger.info(f"Saved {len(rows)} articles for {symbol}")
+    return {"status": "ok", "articles_saved": total}
 
 def fetch_articles(symbol: str) -> list[dict]:
     url = "https://newsapi.org/v2/everything"

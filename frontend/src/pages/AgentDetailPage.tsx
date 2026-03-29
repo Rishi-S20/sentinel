@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/client";
 import NavBar from "@/components/NavBar";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface KeyFactor {
   factor: string;
@@ -65,6 +73,48 @@ export default function AgentDetailPage() {
         </button>
 
         <h1 className="text-2xl font-bold mb-6">Belief History</h1>
+
+        {beliefs.length > 0 && (
+          <div className="bg-surface-800 border border-surface-700 rounded-lg p-5 mb-6">
+            <h2 className="text-sm font-semibold text-surface-400 mb-4">
+              Conviction Over Time
+            </h2>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart
+                data={[...beliefs].reverse().map((b) => ({
+                  date: new Date(b.created_at).toLocaleDateString(),
+                  conviction: Math.round(b.conviction * 100),
+                  asset: b.asset_id,
+                }))}
+              >
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: "#94a3b8", fontSize: 11 }}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fill: "#94a3b8", fontSize: 11 }}
+                  unit="%"
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#1e293b",
+                    border: "1px solid #334155",
+                  }}
+                  labelStyle={{ color: "#94a3b8" }}
+                  formatter={(value: number) => [`${value}%`, "Conviction"]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="conviction"
+                  stroke="#2aa2ff"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {beliefs.length === 0 ? (
           <p className="text-surface-400">

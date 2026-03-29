@@ -9,9 +9,11 @@ This is the first worker to implement. It will:
 from app.workers.celery_app import celery_app
 import logging
 import asyncio
+from sqlalchemy import select, distinct
 from sqlalchemy.dialects.postgresql import insert
 from app.database import async_session
 from app.models.price_data import PriceData
+from app.models.agent import Agent, agent_watchlist
 
 import requests
 from datetime import datetime, timezone
@@ -21,18 +23,27 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
+async def get_tracked_symbols() -> list[str]:
+    """Get all unique asset symbols from active agent watchlists."""
+    async with async_session() as session:
+        result = await session.execute(
+            select(distinct(agent_watchlist.c.asset_id))
+            .join(Agent, Agent.id == agent_watchlist.c.agent_id)
+            .where(Agent.status == "active")
+        )
+        return [row[0] for row in result.all()]
+
+
 @celery_app.task(name="app.workers.price_poller.fetch_prices")
 def fetch_prices():
-    """Fetch latest price data for all tracked assets."""
-    # TODO: Implement in Phase 2
-    # 1. Query DB for all unique assets in active agent watchlists
-    # 2. For each asset, fetch OHLCV from yfinance
-    # 3. Upsert into price_data table
-
-    rows=fetch_ohlcv("AAPL")
-    save_prices(rows)
-    logger.info(f"Saved {len(rows)} rows for AAPL")
-    return {"status" : "ok", "rows_saved" : len(rows)}
+    symbols = asyncio.run(get_tracked_symbols())
+    total = 0
+    for symbol in symbols:
+        rows = fetch_ohlcv(symbol)
+        save_prices(rows)
+        total += len(rows)
+        logger.info(f"Saved {len(rows)} rows for {symbol}")
+    return {"status": "ok", "rows_saved": total}
 
 
 def fetch_ohlcv(symbol: str) -> list[dict]:
