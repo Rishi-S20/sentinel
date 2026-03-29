@@ -4,6 +4,7 @@ import Handler from "./stack/handler";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import AgentDetailpage from "./pages/AgentDetailPage";
+import BriefingsPage from "./pages/BriefingsPage";
 
 function App() {
   return (
@@ -21,7 +22,7 @@ function App() {
 
         <Route path="/agents/:id" element={<AgentDetailpage />} />
         {/* <Route path="/assets/:symbol" element={<AssetDeepDivePage />} /> */}
-        {/* <Route path="/briefings" element={<BriefingsPage />} /> */}
+        <Route path="/agents/:id/briefings" element={<BriefingsPage />} />
         {/* <Route path="/settings" element={<SettingsPage />} /> */}
       </Routes>
     </div>

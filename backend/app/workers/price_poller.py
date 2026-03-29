@@ -65,10 +65,11 @@ def fetch_ohlcv(symbol: str) -> list[dict]:
 
 
 async def save_prices_async(rows: list[dict]):
+    if not rows:
+        return
     async with async_session() as session:
-        for row in rows:
-            stmt = insert(PriceData).values(**row).on_conflict_do_nothing()
-            await session.execute(stmt)
+        stmt = insert(PriceData).values(rows).on_conflict_do_nothing()
+        await session.execute(stmt)
         await session.commit()
 
 def save_prices(rows: list[dict]):

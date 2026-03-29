@@ -62,7 +62,14 @@ celery_app.conf.update(
         # ---- Agent Runs ----
         "run-agents": {
             "task": "app.workers.agent_runner.run_due_agents",
-            "schedule": 3600.0,  # Every hour
+            "schedule": 14400.0,  # Every 4 hours
         },
+
+
+        "embed-articles": {
+            "task": "app.workers.embedding_pipeline.embed_document",
+            "schedule": 900.0,  # Every 15 minutes, right after news fetcher
+        },
+
     },
 )
