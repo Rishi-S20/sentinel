@@ -11,6 +11,14 @@ engine = create_async_engine(
     max_overflow=10,
 )
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+
+# Sync engine for Celery workers
+sync_engine = create_engine(settings.DATABASE_URL_SYNC)
+sync_session = sessionmaker(sync_engine, expire_on_commit=False)
+
+
 # Async session factory
 async_session = async_sessionmaker(
     engine,

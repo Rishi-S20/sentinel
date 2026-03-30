@@ -27,11 +27,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
 
-    # ---- Market Data ----
-    ALPHA_VANTAGE_API_KEY: str = ""
-
-    # ---- News ----
-    NEWS_API_KEY: str = ""
+    # ---- Market Data + News ----
+    FINNHUB_API_KEY: str = ""
 
     # ---- Reddit ----
     REDDIT_CLIENT_ID: str = ""
