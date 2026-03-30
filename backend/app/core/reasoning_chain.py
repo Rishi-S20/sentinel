@@ -23,6 +23,7 @@ Your response must be valid JSON with exactly this shape:
 Return only the JSON object - no markdown, no explanation.
 """
 
+
 def build_prompt(context: dict) -> str:
     asset_id = context["asset_id"]
     prices = context["prices"]
